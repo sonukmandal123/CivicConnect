@@ -1,0 +1,102 @@
+.issue-card {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+}
+
+.issue-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.issue-image-container {
+  height: 200px;
+  width: 100%;
+  background-color: #eee;
+}
+
+.issue-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.no-image {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-style: italic;
+}
+
+.issue-content {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+.issue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.category-tag {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  font-size: 0.8rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.issue-date {
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.issue-title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.1rem;
+  color: #333;
+}
+
+.issue-description {
+  color: #666;
+  font-size: 0.9rem;
+  margin: 0 0 1.25rem 0;
+  flex-grow: 1;
+}
+
+.issue-footer {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Badges */
+.severity-badge, .status-badge {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+/* Severity Colors */
+.low { background-color: #fff8e1; color: #f57f17; }
+.medium { background-color: #ffe0b2; color: #e65100; }
+.high { background-color: #ffebee; color: #c62828; }
+
+/* Status Colors */
+.submitted { background-color: #e0f7fa; color: #00838f; }
+.under-review { background-color: #fff3e0; color: #ef6c00; }
+.verified { background-color: #e8f5e9; color: #2e7d32; }
+.rejected { background-color: #ffebee; color: #c62828; }
+.resolved { background-color: #e8f5e9; color: #1b5e20; }
