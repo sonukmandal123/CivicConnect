@@ -1,7 +1,9 @@
 import React, { useState, useContext, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
+import LocationPicker from '../components/maps/LocationPicker';
+import './Dashboard.css';
 import './ReportIssue.css';
 
 const ReportIssue = () => {
@@ -11,6 +13,9 @@ const ReportIssue = () => {
   const [severity, setSeverity] = useState('');
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  
+  const [latitude, setLatitude] = useState('');
+  const [longitude, setLongitude] = useState('');
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -60,6 +65,10 @@ const ReportIssue = () => {
       return setError('Please fill in all fields and upload an image.');
     }
 
+    if (!latitude || !longitude) {
+      return setError('Please select a location on the map or use your current location.');
+    }
+
     setLoading(true);
 
     try {
@@ -70,6 +79,8 @@ const ReportIssue = () => {
       formData.append('category', category);
       formData.append('severity', severity);
       formData.append('image', image);
+      formData.append('latitude', latitude);
+      formData.append('longitude', longitude);
 
       await api.post('/issues', formData, {
         headers: {
@@ -92,10 +103,18 @@ const ReportIssue = () => {
   };
 
   return (
-    <div className="report-container">
+    <div className="report-container" style={{ flexDirection: 'column', alignItems: 'center' }}>
       <div className="report-card">
-        <h2>Report a Civic Issue</h2>
-        <p className="report-subtitle">Help us improve the community by reporting problems.</p>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px', marginBottom: '20px', borderBottom: '1px solid #eaeaea', paddingBottom: '15px' }}>
+          <div>
+            <h2 style={{ textAlign: 'left', margin: '0 0 5px 0' }}>Report a Civic Issue</h2>
+            <p className="report-subtitle" style={{ textAlign: 'left', margin: '0' }}>Help us improve the community by reporting problems.</p>
+          </div>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Link to="/" className="btn-secondary">Home</Link>
+            <Link to="/dashboard" className="btn-secondary">Dashboard</Link>
+          </div>
+        </div>
         
         {error && <div className="report-alert error">{error}</div>}
         {success && <div className="report-alert success">{success}</div>}
@@ -167,7 +186,20 @@ const ReportIssue = () => {
             </div>
           )}
 
-          <button type="submit" className="report-btn" disabled={loading}>
+          <div className="form-group" style={{ marginTop: '20px' }}>
+            <label>Location</label>
+            <p className="form-hint" style={{ marginBottom: '10px' }}>Please pinpoint the location of the issue.</p>
+            <LocationPicker 
+              latitude={latitude}
+              longitude={longitude}
+              onLocationSelect={(lat, lng) => {
+                setLatitude(lat);
+                setLongitude(lng);
+              }}
+            />
+          </div>
+
+          <button type="submit" className="report-btn" disabled={loading} style={{ marginTop: '20px' }}>
             {loading ? 'Submitting...' : 'Submit Report'}
           </button>
         </form>

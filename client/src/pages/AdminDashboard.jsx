@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import './AdminDashboard.css';
@@ -68,7 +68,10 @@ const AdminDashboard = () => {
             <h1>Admin Control Panel</h1>
             <p className="welcome-msg">Manage civic issues across the platform.</p>
           </div>
-          <button onClick={handleLogout} className="btn-secondary">Logout</button>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <Link to="/map" className="btn-secondary">Map</Link>
+            <button onClick={handleLogout} className="btn-secondary">Logout</button>
+          </div>
         </div>
       </header>
 
@@ -88,6 +91,7 @@ const AdminDashboard = () => {
                   <th>Category</th>
                   <th>Severity</th>
                   <th>Image</th>
+                  <th>AI Analysis</th>
                   <th>Status Action</th>
                 </tr>
               </thead>
@@ -117,6 +121,20 @@ const AdminDashboard = () => {
                       )}
                     </td>
                     <td>
+                      {issue.aiIssueType ? (
+                        <div>
+                          <div style={{ fontSize: '0.85em', color: issue.problemDetected ? '#16a34a' : '#dc2626', fontWeight: 'bold' }}>
+                            {issue.problemDetected ? `${issue.aiConfidence}% Confident` : 'No Issue'}
+                          </div>
+                          {(!issue.problemDetected || (issue.aiIssueType !== 'Unknown/Unclear' && issue.aiIssueType !== issue.category)) && (
+                            <div style={{ fontSize: '0.8em', color: '#ef4444', marginTop: '4px' }}>⚠️ Discrepancy</div>
+                          )}
+                        </div>
+                      ) : (
+                        <span style={{ fontSize: '0.85em', color: '#888' }}>Pending</span>
+                      )}
+                    </td>
+                    <td>
                       <select 
                         value={issue.status} 
                         onChange={(e) => handleStatusChange(issue._id, e.target.value)}
@@ -133,7 +151,7 @@ const AdminDashboard = () => {
                 ))}
                 {issues.length === 0 && (
                   <tr>
-                    <td colSpan="7" className="empty-row">No issues reported yet.</td>
+                    <td colSpan="8" className="empty-row">No issues reported yet.</td>
                   </tr>
                 )}
               </tbody>

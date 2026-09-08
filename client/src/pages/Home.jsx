@@ -1,15 +1,27 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Home.css';
 
 const Home = () => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
     <div className="home-container">
       <nav className="home-nav">
         <div className="logo">
-          <span className="logo-icon">🏛️</span> CivicConnect
+          <img src="/Logo.png" alt="Logo" style={{ height: '40px', width: 'auto' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <span style={{ lineHeight: '1.2' }}>CivicConnect</span>
+            <span style={{ fontSize: '0.45em', color: '#666', fontWeight: '500', letterSpacing: '1px', textTransform: 'uppercase' }}>Connect. Report. Resolve.</span>
+          </div>
         </div>
-        <div className="nav-links">
+        
+        <div className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+          {isMenuOpen ? '✕' : '☰'}
+        </div>
+
+        <div className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+          <Link to="/map" className="nav-link">Map</Link>
           <Link to="/login" className="nav-link">Login</Link>
           <Link to="/register" className="nav-btn">Sign Up</Link>
         </div>

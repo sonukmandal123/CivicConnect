@@ -1,22 +1,26 @@
-# CivicConnect - Phase 1
+# CivicConnect
 
-CivicConnect is a web platform where citizens can report civic problems such as potholes, broken streetlights, and water leakage. 
+CivicConnect is a modern web platform where citizens can report civic problems such as potholes, broken streetlights, and water leakage. 
 
-This repository contains the **Phase 1** implementation of the project, focusing on core authentication and issue reporting features using the MERN stack (MongoDB, Express, React, Node.js).
+This repository contains the **Phase 2** implementation of the project, introducing advanced features like an interactive map, community upvoting, and AI-powered image analysis to verify reports.
 
 ## Features Implemented
-- **Citizen Accounts**: Users can securely register and log in using JWT authentication and bcrypt password hashing.
-- **Civic Issue Reporting**: Logged-in citizens can submit reports containing a title, description, category, severity, and an image.
+- **Citizen Accounts**: Secure registration and login using JWT authentication and bcrypt password hashing.
+- **Civic Issue Reporting**: Citizens can submit detailed reports including category, severity, description, and an image.
 - **Cloudinary Integration**: Images are securely uploaded to Cloudinary instead of being stored on the server.
+- **Interactive Public Map**: View all reported civic issues visually on an interactive map powered by Leaflet and OpenStreetMap.
+- **Community Confirmations**: Users can upvote and confirm issues reported by others to crowd-source validation and help authorities prioritize.
+- **AI-Powered Image Analysis**: Integrated with the Groq API to automatically analyze user-submitted images, detect if a civic problem is visible, and flag discrepancies between the user's claim and the AI's findings.
 - **Citizen Dashboard**: A private dashboard where citizens can track the status of all the issues they have reported.
 - **Admin Control Panel**: A restricted dashboard where administrators can view all reports across the platform and update their status (e.g., from "Submitted" to "Resolved").
 
 ## Tech Stack
-- **Frontend**: React (Vite), React Router, Axios, CSS.
+- **Frontend**: React (Vite), React Router, Axios, CSS, React-Leaflet.
 - **Backend**: Node.js, Express.js.
 - **Database**: MongoDB Atlas, Mongoose.
 - **Authentication**: JSON Web Tokens (JWT).
 - **File Uploads**: Multer, Cloudinary.
+- **AI Integration**: Groq API.
 
 ## How to Run Locally
 
@@ -30,6 +34,7 @@ This repository contains the **Phase 1** implementation of the project, focusing
    - `CLOUDINARY_CLOUD_NAME=<Your Cloudinary Name>`
    - `CLOUDINARY_API_KEY=<Your Cloudinary API Key>`
    - `CLOUDINARY_API_SECRET=<Your Cloudinary API Secret>`
+   - `GROQ_API_KEY=<Your Groq API Key>`
 4. Start the backend server: `npm run dev`
 
 ### 2. Frontend Setup

@@ -48,10 +48,32 @@ const issueSchema = new mongoose.Schema({
     default: 'Submitted',
   },
   
-  // Extensibility for Phase 2 & 3:
-  // latitude: Number,
-  // longitude: Number,
-  // confirmations: Number,
+  // Phase 2 Geospatial additions:
+  latitude: {
+    type: Number,
+    min: -90,
+    max: 90
+  },
+  longitude: {
+    type: Number,
+    min: -180,
+    max: 180
+  },
+  locationAddress: String,
+  
+  // Phase 2 AI additions:
+  aiConfidence: Number,
+  aiIssueType: String,
+  problemDetected: Boolean,
+  aiExplanation: String,
+  
+  // Community Confirmations
+  confirmations: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  
+  // priorityScore: Number,
   // priorityScore: Number,
   // adminRemarks: String,
 }, {

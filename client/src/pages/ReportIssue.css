@@ -123,7 +123,13 @@
 }
 
 /* Responsive adjustments */
-@media (max-width: 500px) {
+@media (max-width: 600px) {
+  .report-container {
+    padding: 1rem;
+  }
+  .report-card {
+    padding: 1.5rem;
+  }
   .form-row {
     flex-direction: column;
     gap: 0;

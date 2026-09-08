@@ -18,13 +18,31 @@ const IssueCard = ({ issue }) => {
     ? issue.description.substring(0, 80) + '...' 
     : issue.description;
 
+  const hasAiData = issue.aiIssueType !== undefined && issue.aiConfidence !== undefined;
+  const hasDiscrepancy = hasAiData && (
+    !issue.problemDetected || 
+    (issue.aiIssueType !== 'Unknown/Unclear' && issue.aiIssueType !== issue.category)
+  );
+  
+  const confirmationsCount = issue.confirmations ? issue.confirmations.length : 0;
+
   return (
     <div className="issue-card">
-      <div className="issue-image-container">
+      <div className="issue-image-container" style={{ position: 'relative' }}>
         {issue.imageUrl ? (
           <img src={issue.imageUrl} alt={issue.title} className="issue-image" />
         ) : (
           <div className="no-image">No Image</div>
+        )}
+        {hasAiData && (
+          <div style={{ position: 'absolute', top: '10px', right: '10px', backgroundColor: 'rgba(59, 130, 246, 0.9)', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75em', fontWeight: 'bold' }}>
+            🤖 AI: {issue.problemDetected ? `${issue.aiConfidence}% Confident` : 'No Issue'}
+          </div>
+        )}
+        {confirmationsCount > 0 && (
+          <div style={{ position: 'absolute', top: '10px', left: '10px', backgroundColor: 'rgba(46, 125, 50, 0.9)', color: 'white', padding: '4px 8px', borderRadius: '12px', fontSize: '0.75em', fontWeight: 'bold' }}>
+            👍 {confirmationsCount}
+          </div>
         )}
       </div>
       
@@ -34,7 +52,10 @@ const IssueCard = ({ issue }) => {
           <span className="issue-date">{formattedDate}</span>
         </div>
         
-        <h3 className="issue-title">{issue.title}</h3>
+        <h3 className="issue-title" style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+          {issue.title}
+          {hasDiscrepancy && <span title="AI flagged a discrepancy with this report" style={{ color: '#ef4444', fontSize: '1.2em' }}>⚠️</span>}
+        </h3>
         <p className="issue-description">{descriptionPreview}</p>
         
         <div className="issue-footer">

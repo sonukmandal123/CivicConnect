@@ -55,8 +55,9 @@ const Dashboard = () => {
             <p className="welcome-msg">Welcome back, {user.name}!</p>
           </div>
           <div className="header-actions">
+            <Link to="/map" className="btn-secondary" style={{ marginRight: '10px' }}>Map</Link>
             <Link to="/report" className="btn-primary">Report Issue</Link>
-            <button onClick={handleLogout} className="btn-secondary">Logout</button>
+            <button onClick={handleLogout} className="btn-secondary" style={{ marginLeft: '10px' }}>Logout</button>
           </div>
         </div>
       </header>

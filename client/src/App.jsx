@@ -7,6 +7,8 @@ import ReportIssue from './pages/ReportIssue';
 import Dashboard from './pages/Dashboard';
 import AdminDashboard from './pages/AdminDashboard';
 import Home from './pages/Home';
+import MapPage from './pages/MapPage';
+import IssueDetails from './pages/IssueDetails';
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/report" element={<ReportIssue />} />
+          <Route path="/map" element={<MapPage />} />
+          <Route path="/issues/:id" element={<IssueDetails />} />
           
           {/* We will protect these routes properly in step 21, but adding paths now */}
           <Route path="/dashboard" element={<Dashboard />} />

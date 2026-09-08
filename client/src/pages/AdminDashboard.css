@@ -126,3 +126,23 @@
   padding: 3rem !important;
   color: #666;
 }
+
+@media (max-width: 768px) {
+  .admin-header {
+    padding: 1rem;
+  }
+  
+  .admin-main {
+    padding: 0 1rem 2rem 1rem;
+  }
+  
+  .admin-table th, .admin-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+  
+  .admin-table-container {
+    box-shadow: none;
+    border: 1px solid #eee;
+  }
+}

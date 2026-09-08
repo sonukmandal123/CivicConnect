@@ -5,7 +5,10 @@ const {
   getMyIssues, 
   getIssueById, 
   getAllIssues, 
-  updateIssueStatus 
+  updateIssueStatus,
+  getMapIssues,
+  testAiAnalysis,
+  confirmIssue
 } = require('../controllers/issueController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -14,6 +17,16 @@ const upload = require('../middleware/uploadMiddleware');
 // @desc    Get all issues
 // @access  Private/Admin
 router.get('/', protect, admin, getAllIssues);
+
+// @route   GET /api/issues/map
+// @desc    Get issues for map display
+// @access  Public
+router.get('/map', getMapIssues);
+
+// @route   POST /api/issues/test-ai
+// @desc    Test AI analysis independently
+// @access  Public
+router.post('/test-ai', testAiAnalysis);
 
 // @route   POST /api/issues
 // @desc    Create a new issue
@@ -28,8 +41,13 @@ router.get('/my', protect, getMyIssues);
 
 // @route   GET /api/issues/:id
 // @desc    Get single issue by ID
+// @access  Public
+router.get('/:id', getIssueById);
+
+// @route   PUT /api/issues/:id/confirm
+// @desc    Confirm an issue
 // @access  Private
-router.get('/:id', protect, getIssueById);
+router.put('/:id/confirm', protect, confirmIssue);
 
 // @route   PUT /api/issues/:id/status
 // @desc    Update issue status
