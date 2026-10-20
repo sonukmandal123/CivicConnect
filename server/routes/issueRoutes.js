@@ -8,7 +8,9 @@ const {
   updateIssueStatus,
   getMapIssues,
   testAiAnalysis,
-  confirmIssue
+  confirmIssue,
+  getIssuePriority,
+  getNearbyIssues
 } = require('../controllers/issueController');
 const { protect, admin } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
@@ -22,6 +24,11 @@ router.get('/', protect, admin, getAllIssues);
 // @desc    Get issues for map display
 // @access  Public
 router.get('/map', getMapIssues);
+
+// @route   GET /api/issues/nearby
+// @desc    Get nearby issues by GPS coordinates using MongoDB 2dsphere index
+// @access  Public
+router.get('/nearby', getNearbyIssues);
 
 // @route   POST /api/issues/test-ai
 // @desc    Test AI analysis independently
@@ -43,6 +50,11 @@ router.get('/my', protect, getMyIssues);
 // @desc    Get single issue by ID
 // @access  Public
 router.get('/:id', getIssueById);
+
+// @route   GET /api/issues/:id/priority
+// @desc    Get priority score and breakdown for an issue
+// @access  Public
+router.get('/:id/priority', getIssuePriority);
 
 // @route   PUT /api/issues/:id/confirm
 // @desc    Confirm an issue

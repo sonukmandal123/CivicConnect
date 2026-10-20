@@ -59,8 +59,7 @@ const analyzeIssueImage = async (imageUrl, userCategory, userDescription) => {
     return null;
   }
 
-  // Use the model from .env or default to the Qwen Vision model
-  const model = process.env.GROQ_VISION_MODEL || 'qwen/qwen3.6-27b';
+  const model = process.env.GROQ_VISION_MODEL || 'qwen/qwen3.8-27b';
 
   const systemPrompt = `
 You are an AI assistant for a civic issue reporting platform.

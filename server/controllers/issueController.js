@@ -1,6 +1,8 @@
 const Issue = require('../models/Issue');
 const { cloudinary } = require('../config/cloudinary');
 const { analyzeIssueImage } = require('../services/aiService');
+const { validateStatusTransition, recordStatusChange } = require('../services/statusTransitionService');
+const { calculatePriority } = require('../services/priorityService');
 const fs = require('fs');
 
 // @desc    Create a new issue
@@ -44,6 +46,16 @@ const createIssue = async (req, res) => {
       console.error('AI Analysis failed during issue creation, proceeding without AI data:', aiError);
     }
 
+    // Calculate initial priority score and level
+    const initialPriority = calculatePriority({
+      severity,
+      confirmations: [],
+      ...aiData,
+      category,
+      createdAt: new Date(),
+      status: 'Submitted'
+    });
+
     // Create the issue in MongoDB
     const issue = await Issue.create({
       title,
@@ -52,10 +64,23 @@ const createIssue = async (req, res) => {
       severity,
       latitude: Number(latitude),
       longitude: Number(longitude),
+      location: {
+        type: 'Point',
+        coordinates: [Number(longitude), Number(latitude)]
+      },
       imageUrl: result.secure_url,
       imagePublicId: result.public_id,
       reportedBy: req.user._id, // Got this from the 'protect' middleware
       status: 'Submitted',
+      priorityScore: initialPriority.score,
+      priorityLevel: initialPriority.level,
+      priorityExplanation: initialPriority.factors,
+      statusHistory: [{
+        status: 'Submitted',
+        changedBy: req.user._id,
+        changedAt: new Date(),
+        remark: 'Issue submitted by citizen'
+      }],
       ...aiData
     });
 
@@ -86,16 +111,26 @@ const getMyIssues = async (req, res) => {
 
 // @desc    Get single issue by ID
 // @route   GET /api/issues/:id
-// @access  Private
+// @access  Public
 const getIssueById = async (req, res) => {
   try {
-    const issue = await Issue.findById(req.params.id);
+    const issue = await Issue.findById(req.params.id)
+      .populate('reportedBy', 'name email')
+      .populate('assignedBy', 'name email role')
+      .populate('resolvedBy', 'name email role')
+      .populate('statusHistory.changedBy', 'name email role')
+      .populate('adminRemarks.addedBy', 'name email role');
 
     if (!issue) {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    res.json(issue);
+    // Attach dynamic live priority calculation with human-readable factors
+    const livePriority = calculatePriority(issue);
+    const issueObj = issue.toObject();
+    issueObj.priority = livePriority;
+
+    res.json(issueObj);
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error while fetching the issue' });
@@ -125,12 +160,10 @@ const getAllIssues = async (req, res) => {
 // @access  Private/Admin
 const updateIssueStatus = async (req, res) => {
   try {
-    const { status } = req.body;
+    const { status, remark } = req.body;
     
-    // Validate status
-    const validStatuses = ['Submitted', 'Under Review', 'Verified', 'Rejected', 'Resolved'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: 'Invalid status value' });
+    if (!status) {
+      return res.status(400).json({ message: 'Target status is required' });
     }
 
     const issue = await Issue.findById(req.params.id);
@@ -139,7 +172,36 @@ const updateIssueStatus = async (req, res) => {
       return res.status(404).json({ message: 'Issue not found' });
     }
 
-    issue.status = status;
+    // Validate the status transition using state machine service
+    const transitionCheck = validateStatusTransition(issue.status, status);
+    if (!transitionCheck.isValid) {
+      return res.status(400).json({ 
+        message: transitionCheck.message,
+        currentStatus: issue.status,
+        requestedStatus: status
+      });
+    }
+
+    // Set audit fields for Verification or Rejection
+    if (status === 'Verified') {
+      issue.verifiedAt = new Date();
+      issue.verifiedBy = req.user._id;
+    } else if (status === 'Rejected') {
+      issue.rejectedAt = new Date();
+      issue.rejectedBy = req.user._id;
+    }
+
+    if (remark && remark.trim()) {
+      issue.adminRemarks.push({
+        text: remark.trim(),
+        addedBy: req.user._id,
+        createdAt: new Date()
+      });
+    }
+
+    // Record in statusHistory and update status
+    recordStatusChange(issue, status, req.user._id, remark);
+
     const updatedIssue = await issue.save();
 
     res.json(updatedIssue);
@@ -218,12 +280,147 @@ const confirmIssue = async (req, res) => {
 
     // Add user to confirmations array
     issue.confirmations.push(req.user._id);
+
+    // Recalculate priority score with updated community confirmations
+    const updatedPriority = calculatePriority(issue);
+    issue.priorityScore = updatedPriority.score;
+    issue.priorityLevel = updatedPriority.level;
+    issue.priorityExplanation = updatedPriority.factors;
+
     await issue.save();
 
-    res.json({ message: 'Issue confirmed successfully', confirmations: issue.confirmations });
+    res.json({
+      message: 'Issue confirmed successfully',
+      confirmations: issue.confirmations,
+      priority: updatedPriority
+    });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Server error while confirming issue' });
+  }
+};
+
+// @desc    Get priority score and detailed explanation breakdown for an issue
+// @route   GET /api/issues/:id/priority
+// @access  Public
+const getIssuePriority = async (req, res) => {
+  try {
+    const issue = await Issue.findById(req.params.id);
+
+    if (!issue) {
+      return res.status(404).json({ message: 'Issue not found' });
+    }
+
+    const priorityData = calculatePriority(issue);
+    res.json(priorityData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Server error while calculating priority' });
+  }
+};
+
+// @desc    Get nearby civic issues within a radius using MongoDB 2dsphere geospatial index
+// @route   GET /api/issues/nearby
+// @access  Public
+const getNearbyIssues = async (req, res) => {
+  try {
+    const { longitude, latitude, radius, category, status, limit } = req.query;
+
+    // 1. Validate coordinates presence
+    if (longitude === undefined || latitude === undefined || longitude === '' || latitude === '') {
+      return res.status(400).json({
+        success: false,
+        message: "Missing required geospatial coordinates: 'longitude' and 'latitude' parameters are required."
+      });
+    }
+
+    const lng = parseFloat(longitude);
+    const lat = parseFloat(latitude);
+
+    // 2. Validate coordinates range
+    if (isNaN(lng) || isNaN(lat) || lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid coordinates: 'longitude' must be between -180 and 180, and 'latitude' must be between -90 and 90."
+      });
+    }
+
+    // 3. Radius in meters (default: 5000m / 5km, clamped between 50m and 50000m)
+    const radiusMeters = Math.min(Math.max(parseInt(radius) || 5000, 50), 50000);
+    const maxResults = Math.min(parseInt(limit) || 50, 100);
+
+    // 4. Construct optional filters
+    const queryFilter = {};
+
+    if (category && category !== 'All') {
+      queryFilter.category = category;
+    }
+
+    if (status && status !== 'All') {
+      queryFilter.status = status;
+    } else {
+      queryFilter.status = { $ne: 'Rejected' }; // Exclude rejected issues by default for public search
+    }
+
+    // 5. Execute geospatial aggregation with $geoNear
+    const issues = await Issue.aggregate([
+      {
+        $geoNear: {
+          near: {
+            type: 'Point',
+            coordinates: [lng, lat]
+          },
+          distanceField: 'distanceMeters',
+          maxDistance: radiusMeters,
+          spherical: true,
+          query: queryFilter
+        }
+      },
+      {
+        $project: {
+          title: 1,
+          description: 1,
+          category: 1,
+          severity: 1,
+          status: 1,
+          imageUrl: 1,
+          latitude: 1,
+          longitude: 1,
+          location: 1,
+          locationAddress: 1,
+          priorityScore: 1,
+          priorityLevel: 1,
+          assignedDepartment: 1,
+          confirmationsCount: {
+            $cond: {
+              if: { $isArray: '$confirmations' },
+              then: { $size: '$confirmations' },
+              else: 0
+            }
+          },
+          createdAt: 1,
+          distanceMeters: { $round: ['$distanceMeters', 1] },
+          distanceKm: { $round: [{ $divide: ['$distanceMeters', 1000] }, 2] }
+        }
+      },
+      { $limit: maxResults }
+    ]);
+
+    res.json({
+      success: true,
+      center: { longitude: lng, latitude: lat },
+      radiusMeters,
+      radiusKm: Math.round((radiusMeters / 1000) * 10) / 10,
+      count: issues.length,
+      issues
+    });
+  } catch (error) {
+    console.error('Error in getNearbyIssues:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error while performing geospatial search',
+      error: error.message
+    });
   }
 };
 
@@ -236,4 +433,7 @@ module.exports = {
   getMapIssues,
   testAiAnalysis,
   confirmIssue,
+  getIssuePriority,
+  getNearbyIssues
 };
+

@@ -18,10 +18,10 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const DEFAULT_MAP_CENTER = [22.8046, 86.2029]; // Center point as per prompt
 const DEFAULT_MAP_ZOOM = 13;
 
-function LocationMarker({ position, setPosition }) {
+function LocationMarker({ position, onSelect }) {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
+      if (onSelect) onSelect(e.latlng.lat, e.latlng.lng);
     },
   });
 
@@ -31,18 +31,25 @@ function LocationMarker({ position, setPosition }) {
 }
 
 const LocationPicker = ({ latitude, longitude, onLocationSelect }) => {
+  const initialLat = latitude ? parseFloat(latitude) : null;
+  const initialLng = longitude ? parseFloat(longitude) : null;
+  
   const [position, setPosition] = useState(
-    latitude && longitude ? { lat: latitude, lng: longitude } : null
+    initialLat && initialLng && !isNaN(initialLat) && !isNaN(initialLng) 
+      ? { lat: initialLat, lng: initialLng } 
+      : null
   );
   const [locating, setLocating] = useState(false);
   const [locationError, setLocationError] = useState('');
   const mapRef = useRef(null);
 
-  useEffect(() => {
-    if (position) {
-      onLocationSelect(position.lat, position.lng);
+  const handleSelectCoords = (lat, lng) => {
+    const newPos = { lat, lng };
+    setPosition(newPos);
+    if (onLocationSelect) {
+      onLocationSelect(lat, lng);
     }
-  }, [position, onLocationSelect]);
+  };
 
   const handleUseCurrentLocation = () => {
     setLocating(true);
@@ -54,12 +61,11 @@ const LocationPicker = ({ latitude, longitude, onLocationSelect }) => {
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const { latitude, longitude } = pos.coords;
-        const newPos = { lat: latitude, lng: longitude };
-        setPosition(newPos);
+        const { latitude: lat, longitude: lng } = pos.coords;
+        handleSelectCoords(lat, lng);
         setLocating(false);
         if (mapRef.current) {
-          mapRef.current.flyTo(newPos, 15);
+          mapRef.current.flyTo({ lat, lng }, 15);
         }
       },
       (err) => {
@@ -95,7 +101,7 @@ const LocationPicker = ({ latitude, longitude, onLocationSelect }) => {
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          <LocationMarker position={position} setPosition={setPosition} />
+          <LocationMarker position={position} onSelect={handleSelectCoords} />
         </MapContainer>
       </div>
       

@@ -10,17 +10,19 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   
-  const { user, token, logout } = useContext(AuthContext);
+  const { user, token, loading: authLoading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
 
   // Basic route protection and role redirection
   useEffect(() => {
-    if (!token) {
-      navigate('/login');
-    } else if (user && user.role === 'admin') {
-      navigate('/admin');
+    if (!authLoading) {
+      if (!token || !user) {
+        navigate('/login');
+      } else if (user.role === 'admin') {
+        navigate('/admin');
+      }
     }
-  }, [token, user, navigate]);
+  }, [authLoading, token, user, navigate]);
 
   useEffect(() => {
     const fetchMyIssues = async () => {
@@ -34,17 +36,34 @@ const Dashboard = () => {
       }
     };
 
-    if (token) {
+    if (token && user && user.role !== 'admin') {
       fetchMyIssues();
     }
-  }, [token]);
+  }, [token, user]);
 
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
-  if (!user) return null; // Wait for redirect or user data
+  if (authLoading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '100px 20px', color: '#64748b' }}>
+        <div style={{ width: '36px', height: '36px', border: '3px solid #e2e8f0', borderTopColor: '#3b82f6', borderRadius: '50%', margin: '0 auto 12px auto', animation: 'spin 1s linear infinite' }}></div>
+        Loading your citizen dashboard...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div style={{ maxWidth: '420px', margin: '80px auto', padding: '30px', textAlign: 'center', background: '#fff', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)' }}>
+        <h2>Sign In Required</h2>
+        <p style={{ color: '#666', margin: '12px 0 20px 0' }}>Please log in to view and manage your submitted civic reports.</p>
+        <Link to="/login" className="btn-primary" style={{ display: 'inline-block', textDecoration: 'none' }}>Go to Login</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard-container">
@@ -55,9 +74,36 @@ const Dashboard = () => {
             <p className="welcome-msg">Welcome back, {user.name}!</p>
           </div>
           <div className="header-actions">
-            <Link to="/map" className="btn-secondary" style={{ marginRight: '10px' }}>Map</Link>
-            <Link to="/report" className="btn-primary">Report Issue</Link>
-            <button onClick={handleLogout} className="btn-secondary" style={{ marginLeft: '10px' }}>Logout</button>
+            <Link to="/" className="btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+              </svg>
+              Home
+            </Link>
+            <Link to="/map" className="btn-secondary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+                <line x1="8" y1="2" x2="8" y2="18"></line>
+                <line x1="16" y1="6" x2="16" y2="22"></line>
+              </svg>
+              Map View
+            </Link>
+            <Link to="/report" className="btn-primary">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+              Report Issue
+            </Link>
+            <button onClick={handleLogout} className="btn-danger">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                <polyline points="16 17 21 12 16 7"></polyline>
+                <line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              Logout
+            </button>
           </div>
         </div>
       </header>

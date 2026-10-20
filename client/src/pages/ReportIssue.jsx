@@ -1,4 +1,4 @@
-import React, { useState, useContext, useEffect } from 'react';
+import React, { useState, useContext, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
@@ -21,15 +21,20 @@ const ReportIssue = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  const { user, token } = useContext(AuthContext);
+  const { user, token, loading: authLoading } = useContext(AuthContext);
   const navigate = useNavigate();
 
-  // Basic protection: if not logged in, redirect to login
+  // Protection: if not logged in after auth check, redirect to login
   useEffect(() => {
-    if (!token) {
+    if (!authLoading && !token) {
       navigate('/login');
     }
-  }, [token, navigate]);
+  }, [authLoading, token, navigate]);
+
+  const handleLocationSelect = useCallback((lat, lng) => {
+    setLatitude(lat);
+    setLongitude(lng);
+  }, []);
 
   const handleImageChange = (e) => {
     setError('');
@@ -192,10 +197,7 @@ const ReportIssue = () => {
             <LocationPicker 
               latitude={latitude}
               longitude={longitude}
-              onLocationSelect={(lat, lng) => {
-                setLatitude(lat);
-                setLongitude(lng);
-              }}
+              onLocationSelect={handleLocationSelect}
             />
           </div>
 

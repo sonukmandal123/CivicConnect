@@ -18,7 +18,15 @@ L.Marker.prototype.options.icon = DefaultIcon;
 const DEFAULT_MAP_CENTER = [22.8046, 86.2029];
 const DEFAULT_MAP_ZOOM = 13;
 
-const IssueMap = ({ issues }) => {
+const IssueMap = ({ issues = [] }) => {
+  // Defensive filter: only render markers with valid numeric latitude & longitude
+  const validIssues = (Array.isArray(issues) ? issues : []).filter(issue => {
+    if (!issue) return false;
+    const lat = parseFloat(issue.latitude);
+    const lng = parseFloat(issue.longitude);
+    return !isNaN(lat) && !isNaN(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  });
+
   return (
     <div style={{ height: '500px', width: '100%', borderRadius: '8px', overflow: 'hidden', border: '1px solid #ddd' }}>
       <MapContainer 
@@ -30,8 +38,8 @@ const IssueMap = ({ issues }) => {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        {issues.map((issue) => (
-          <Marker key={issue._id} position={[issue.latitude, issue.longitude]}>
+        {validIssues.map((issue) => (
+          <Marker key={issue._id} position={[parseFloat(issue.latitude), parseFloat(issue.longitude)]}>
             <Popup>
               <div style={{ minWidth: '200px' }}>
                 <h4 style={{ margin: '0 0 5px 0', fontSize: '1.1em' }}>{issue.title}</h4>
@@ -39,20 +47,23 @@ const IssueMap = ({ issues }) => {
                   <img 
                     src={issue.imageUrl} 
                     alt={issue.title} 
-                    style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }} 
+                    style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '4px', marginBottom: '8px' }}
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = 'https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=800&q=80';
+                    }}
                   />
                 )}
                 <p style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>Category:</strong> {issue.category}</p>
                 <p style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>Severity:</strong> {issue.severity}</p>
                 <p style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>Status:</strong> {issue.status}</p>
-                <p style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>Date:</strong> {new Date(issue.createdAt).toLocaleDateString()}</p>
+                <p style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>Date:</strong> {issue.createdAt ? new Date(issue.createdAt).toLocaleDateString() : 'Recent'}</p>
                 {issue.confirmations && issue.confirmations.length > 0 && (
-                  <p style={{ margin: '0 0 4px 0', fontSize: '0.9em', color: '#2e7d32', fontWeight: 'bold' }}>👍 {issue.confirmations.length} Confirmations</p>
+                  <p style={{ margin: '0 0 4px 0', fontSize: '0.9em', color: '#2e7d32', fontWeight: 'bold' }}>{issue.confirmations.length} Confirmations</p>
                 )}
                 
                 {issue.aiIssueType && (
                   <div style={{ marginTop: '8px', padding: '4px 6px', backgroundColor: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: '4px', fontSize: '0.85em', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <span>🤖</span> 
                     <strong>AI:</strong> 
                     {issue.problemDetected ? <span style={{ color: '#16a34a' }}>{issue.aiConfidence}% Confident</span> : <span style={{ color: '#dc2626' }}>No Issue</span>}
                   </div>

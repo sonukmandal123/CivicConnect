@@ -18,9 +18,11 @@ const Login = () => {
     const result = await login(email, password);
     
     if (result.success) {
-      // Navigate based on role or to dashboard
-      // Note: we can get user role from AuthContext but for now we just redirect
-      navigate('/dashboard'); 
+      if (result.user && result.user.role === 'admin') {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
     } else {
       setError(result.message);
     }
