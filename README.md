@@ -203,37 +203,3 @@ Run the included scripts from the `server` folder:
   ```bash
   node scripts/testEndToEnd.js
   ```
-
----
-
-## 🎓 College Minor Project Viva Voce Reference
-
-### Q1: What makes CivicConnect different from a standard complaint portal?
-**Answer:** Traditional portals act as static message boxes where complaints get lost without accountability. CivicConnect introduces:
-1. **Explainable 4-Factor Prioritization:** Automatically bubbles high-urgency hazards (severity + AI confidence + community upvotes + wait time) to the top of the queue.
-2. **Authoritative State Machine:** Prevents arbitrary status changes; issues must be inspected, assigned to departments, and resolved with tangible photographic proof.
-3. **Geospatial Proximity Search:** Employs spherical indexing so citizens and field teams can instantly locate defects within meters of their current GPS location.
-4. **Transparent Public Auditing:** Citizens see every timestamped action taken by authorities along with before/after photos.
-
-### Q2: Why did you choose MongoDB Aggregation Pipelines instead of processing data in JavaScript?
-**Answer:** Performing statistical aggregations (like averages, distributions, and date extractions) inside MongoDB Atlas using `$group`, `$project`, and `$subtract` is significantly faster and more scalable:
-- **Zero Memory Exhaustion:** Node.js does not need to load thousands of documents into RAM.
-- **Bandwidth Efficiency:** Only the calculated totals (a few bytes) travel across the network.
-- **Hardware Optimization:** MongoDB processes calculations close to storage using pre-built C++ indexing algorithms.
-
-### Q3: Why does GeoJSON mandate `[longitude, latitude]` instead of `[latitude, longitude]`?
-**Answer:** GeoJSON adheres to standard Cartesian $(X, Y)$ coordinate geometry where the horizontal axis (East-West) is $X$ (Longitude) and the vertical axis (North-South) is $Y$ (Latitude). While conversational English says "Lat/Long", spatial database standards (OGC and GeoJSON RFC 7946) strictly mandate `[longitude, latitude]`.
-
-### Q4: How is security and data privacy maintained on public views?
-**Answer:** 
-- Passwords are encrypted with `bcrypt` (10 salt rounds) and stripped from all database queries via Mongoose `select: false`.
-- Endpoints return sanitized user projections (`name`, `email`, `role`).
-- Authorization is checked on every administrative mutation using custom Express middleware (`protect` and `admin`).
-
----
-
-## 👥 Contributors & Academic Credits
-- **Project:** College Minor Project (Semester 7)
-- **Institution:** Department of Computer Science & Engineering
-- **Author:** Sonu Kumar Mandal (AJU)
-- **Core Technology:** MERN Stack (MongoDB, Express, React, Node.js) with Groq Vision AI & Leaflet
