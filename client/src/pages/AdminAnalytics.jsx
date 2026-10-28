@@ -4,6 +4,7 @@ import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import PriorityBadge from '../components/PriorityBadge';
 import StatusBadge from '../components/StatusBadge';
+import NotificationBell from '../components/NotificationBell';
 import './AdminAnalytics.css';
 
 const CATEGORY_COLORS = {
@@ -157,6 +158,7 @@ const AdminAnalytics = () => {
             </p>
           </div>
           <div className="analytics-header-actions">
+            <NotificationBell variant="admin" />
             <Link to="/admin" className="analytics-nav-btn secondary">
               Issue Queue
             </Link>
@@ -372,7 +374,7 @@ const AdminAnalytics = () => {
                     return (
                       <div key={tier} className="tier-card">
                         <div className="tier-badge-row">
-                          <PriorityBadge priorityLevel={tier} />
+                          <PriorityBadge level={tier} />
                           <span className="tier-count"><strong>{count}</strong> ({pct}%)</span>
                         </div>
                         <div className="tier-track">

@@ -32,10 +32,10 @@ const userSchema = new mongoose.Schema({
 });
 
 // Encrypt password using bcrypt before saving
-userSchema.pre('save', async function (next) {
+userSchema.pre('save', async function () {
   // If the password is not modified, skip the hash
   if (!this.isModified('password')) {
-    next();
+    return;
   }
 
   // Generate a salt and hash the password

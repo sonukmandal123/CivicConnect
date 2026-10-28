@@ -140,6 +140,16 @@ All metrics are computed inside the database engine across 9 concurrent aggregat
 | `GET` | `/api/admin/analytics/community` | Crowdsourced confirmation statistics and top confirmed issues |
 | `GET` | `/api/admin/analytics/ai` | Groq AI vision inspection volume and confidence stats |
 
+### Real-Time Notifications (`/api/notifications`)
+*All notification routes require JWT Authentication (Citizen or Admin).*
+| Method | Route | Access | Description |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/notifications` | Private | Fetch notifications with unread counter |
+| `PATCH`| `/api/notifications/:id/read` | Private | Mark a single notification as read |
+| `PATCH`| `/api/notifications/read-all` | Private | Mark all user notifications as read |
+| `DELETE`| `/api/notifications/:id` | Private | Dismiss/delete a specific notification |
+| `DELETE`| `/api/notifications/clear-all` | Private | Clear all notifications for the user |
+
 ---
 
 ## 🚀 Setup & Local Execution Guide
@@ -188,18 +198,25 @@ All metrics are computed inside the database engine across 9 concurrent aggregat
    ```
    The client will open at `http://localhost:5173`.
 
-### 4. Admin Account & Realistic Demo Data
+### 4. Real-time Notification Hub & Resend Email Pipeline
+- **In-App Notification Hub**: Real-time popover dropdown displaying unread badges, status updates, community confirmation alerts, and department assignments.
+- **Resend Email System**: Instant transactional emails dispatched asynchronously across every lifecycle milestone (Submission confirmation, Under Review inspection, Verified, Department Assignment, Resolution proof).
+
+### 5. Admin Account & Realistic Demo Data
 Run the included scripts from the `server` folder:
 - **Create Admin User:**
   ```bash
   node scripts/createAdmin.js
   ```
   *Credentials: `admin@example.com` / `adminpassword123`*
-- **Populate Realistic Municipal Demo Data (12 diverse issues across all categories & statuses):**
+- **Populate Realistic Municipal Demo Data:**
   ```bash
   node scripts/seedDemoData.js
   ```
-- **Execute End-to-End Scenario Verification Test:**
+- **Execute End-to-End Test Suites:**
   ```bash
-  node scripts/testEndToEnd.js
+  node scripts/testNotifications.js
+  node scripts/testEndToEndWorkflow.js
+  node scripts/testEmailWorkflow.js
   ```
+

@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import api from '../services/api';
 import LocationPicker from '../components/maps/LocationPicker';
+import NotificationBell from '../components/NotificationBell';
 import './Dashboard.css';
 import './ReportIssue.css';
 
@@ -115,7 +116,8 @@ const ReportIssue = () => {
             <h2 style={{ textAlign: 'left', margin: '0 0 5px 0' }}>Report a Civic Issue</h2>
             <p className="report-subtitle" style={{ textAlign: 'left', margin: '0' }}>Help us improve the community by reporting problems.</p>
           </div>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <NotificationBell />
             <Link to="/" className="btn-secondary">Home</Link>
             <Link to="/dashboard" className="btn-secondary">Dashboard</Link>
           </div>

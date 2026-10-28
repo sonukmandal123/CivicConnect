@@ -32,8 +32,8 @@ router.get('/nearby', getNearbyIssues);
 
 // @route   POST /api/issues/test-ai
 // @desc    Test AI analysis independently
-// @access  Public
-router.post('/test-ai', testAiAnalysis);
+// @access  Private/Admin
+router.post('/test-ai', protect, admin, testAiAnalysis);
 
 // @route   POST /api/issues
 // @desc    Create a new issue

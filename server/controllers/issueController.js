@@ -3,6 +3,7 @@ const { cloudinary } = require('../config/cloudinary');
 const { analyzeIssueImage } = require('../services/aiService');
 const { validateStatusTransition, recordStatusChange } = require('../services/statusTransitionService');
 const { calculatePriority } = require('../services/priorityService');
+const { notifyAllAdmins, notifyCitizen } = require('../services/notificationService');
 const fs = require('fs');
 
 // @desc    Create a new issue
@@ -84,6 +85,26 @@ const createIssue = async (req, res) => {
       ...aiData
     });
 
+    // Notify all municipal admins about the newly submitted civic issue
+    notifyAllAdmins({
+      sender: req.user._id,
+      issue: issue._id,
+      type: 'ISSUE_SUBMITTED',
+      title: 'New Civic Issue Reported',
+      message: `${req.user.name || 'A citizen'} reported a new ${issue.severity} severity ${issue.category}: "${issue.title}".`,
+      link: `/admin/issues/${issue._id}`
+    }).catch(err => console.error('Failed to notify admins on new issue:', err.message));
+
+    // Acknowledge report receipt to the reporting citizen
+    notifyCitizen({
+      citizenId: req.user._id,
+      issue: issue._id,
+      type: 'ISSUE_SUBMITTED',
+      title: 'Report Submitted Successfully',
+      message: `Your report "${issue.title}" has been registered in the municipal queue with initial priority ${issue.priorityLevel} (${issue.priorityScore} pts).`,
+      link: `/issues/${issue._id}`
+    }).catch(err => console.error('Failed to notify citizen on issue submission:', err.message));
+
     res.status(201).json(issue);
   } catch (error) {
     console.error(error);
@@ -115,7 +136,7 @@ const getMyIssues = async (req, res) => {
 const getIssueById = async (req, res) => {
   try {
     const issue = await Issue.findById(req.params.id)
-      .populate('reportedBy', 'name email')
+      .populate('reportedBy', 'name')
       .populate('assignedBy', 'name email role')
       .populate('resolvedBy', 'name email role')
       .populate('statusHistory.changedBy', 'name email role')
@@ -288,6 +309,29 @@ const confirmIssue = async (req, res) => {
     issue.priorityExplanation = updatedPriority.factors;
 
     await issue.save();
+
+    // Notify original reporting citizen of community upvote
+    notifyCitizen({
+      citizenId: issue.reportedBy,
+      sender: req.user._id,
+      issue: issue._id,
+      type: 'ISSUE_CONFIRMED',
+      title: 'Community Support: +5 Priority Points',
+      message: `A community member confirmed your report "${issue.title}". Priority score increased to ${updatedPriority.score} (${updatedPriority.level}).`,
+      link: `/issues/${issue._id}`
+    }).catch(err => console.error('Failed to notify citizen on confirmation:', err.message));
+
+    // If score crossed into Critical priority, alert all admins immediately
+    if (updatedPriority.level === 'Critical') {
+      notifyAllAdmins({
+        sender: req.user._id,
+        issue: issue._id,
+        type: 'ISSUE_CONFIRMED',
+        title: 'Urgent: Priority Escalated to Critical',
+        message: `Civic report "${issue.title}" escalated to Critical priority (${updatedPriority.score}/100) after community confirmations.`,
+        link: `/admin/issues/${issue._id}`
+      }).catch(err => console.error('Failed to notify admins on critical escalation:', err.message));
+    }
 
     res.json({
       message: 'Issue confirmed successfully',

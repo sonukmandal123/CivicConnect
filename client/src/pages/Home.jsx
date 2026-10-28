@@ -1,9 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
+import NotificationBell from '../components/NotificationBell';
 import './Home.css';
 
 const Home = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, logout } = useContext(AuthContext);
 
   return (
     <div className="home-container">
@@ -20,10 +23,28 @@ const Home = () => {
           {isMenuOpen ? '✕' : '☰'}
         </div>
 
-        <div className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+        <div className={`nav-links ${isMenuOpen ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
           <Link to="/map" className="nav-link">Map</Link>
-          <Link to="/login" className="nav-link">Login</Link>
-          <Link to="/register" className="nav-btn">Sign Up</Link>
+          {user ? (
+            <>
+              <NotificationBell />
+              <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="nav-link">
+                {user.role === 'admin' ? 'Admin Portal' : 'Dashboard'}
+              </Link>
+              <button 
+                onClick={logout} 
+                className="nav-btn" 
+                style={{ background: '#ef4444', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px', color: 'white', fontWeight: '600' }}
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <Link to="/login" className="nav-link">Login</Link>
+              <Link to="/register" className="nav-btn">Sign Up</Link>
+            </>
+          )}
         </div>
       </nav>
 

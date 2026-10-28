@@ -5,6 +5,7 @@ import api from '../services/api';
 import PriorityBadge from '../components/PriorityBadge';
 import StatusBadge from '../components/StatusBadge';
 import ActionModal from '../components/modals/ActionModal';
+import NotificationBell from '../components/NotificationBell';
 import './AdminDashboard.css';
 
 const DEPARTMENTS = [
@@ -178,6 +179,7 @@ const AdminDashboard = () => {
             <p className="welcome-msg">Issue Verification, Department Assignment & Priority Management</p>
           </div>
           <div className="header-actions">
+            <NotificationBell variant="admin" />
             <Link to="/map" className="admin-nav-btn secondary">
               Map View
             </Link>
@@ -414,7 +416,7 @@ const AdminDashboard = () => {
                           {issue.status === 'Submitted' && (
                             <button
                               className="btn-action-quick"
-                              onClick={() => openActionModal(issue, 'verify')}
+                              onClick={() => openActionModal(issue, 'review')}
                               style={{ backgroundColor: '#0284c7' }}
                             >
                               Review
@@ -458,6 +460,16 @@ const AdminDashboard = () => {
                               style={{ backgroundColor: '#15803d' }}
                             >
                               Resolve
+                            </button>
+                          )}
+
+                          {issue.status === 'Rejected' && (
+                            <button
+                              className="btn-action-quick"
+                              onClick={() => openActionModal(issue, 'review')}
+                              style={{ backgroundColor: '#64748b' }}
+                            >
+                              Reopen
                             </button>
                           )}
                         </div>

@@ -17,16 +17,20 @@ const protect = async (req, res, next) => {
       // Get user from the token payload and attach it to req.user (excluding password)
       req.user = await User.findById(decoded.id).select('-password');
 
-      next(); // Move to the next middleware or route handler
+      if (!req.user) {
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+
+      return next(); // Move to the next middleware or route handler
     } catch (error) {
-      console.error(error);
-      res.status(401).json({ message: 'Not authorized, token failed' });
+      console.error('Auth verification error:', error.message);
+      return res.status(401).json({ message: 'Not authorized, token failed' });
     }
   }
 
   // If no token was found
   if (!token) {
-    res.status(401).json({ message: 'Not authorized, no token' });
+    return res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 

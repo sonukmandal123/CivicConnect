@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
+import { AuthContext } from '../context/AuthContext';
 import IssueMap from '../components/maps/IssueMap';
+import NotificationBell from '../components/NotificationBell';
 import api from '../services/api';
 import './Dashboard.css';
 
 const MapPage = () => {
+  const { user } = useContext(AuthContext);
   const [issues, setIssues] = useState([]);
   const [filteredIssues, setFilteredIssues] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -128,6 +131,7 @@ const MapPage = () => {
             <p className="welcome-msg" style={{ margin: '5px 0 0 0', color: '#666' }}>Explore reported civic issues in your area.</p>
           </div>
           <div className="header-actions">
+            {user && <NotificationBell />}
             <Link to="/" className="btn-secondary">Home</Link>
             <Link to="/dashboard" className="btn-secondary">Dashboard</Link>
           </div>

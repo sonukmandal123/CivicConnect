@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import IssueCard from '../components/IssueCard';
+import NotificationBell from '../components/NotificationBell';
 import api from '../services/api';
 import './Dashboard.css';
 
@@ -74,6 +75,7 @@ const Dashboard = () => {
             <p className="welcome-msg">Welcome back, {user.name}!</p>
           </div>
           <div className="header-actions">
+            <NotificationBell />
             <Link to="/" className="btn-secondary">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>

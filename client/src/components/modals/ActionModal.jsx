@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../services/api';
 import './ActionModal.css';
 
@@ -15,7 +15,7 @@ const DEPARTMENTS = [
 const ActionModal = ({
   isOpen,
   onClose,
-  actionType, // 'verify', 'reject', 'assign', 'in-progress', 'resolve', 'remark', 'duplicate'
+  actionType, // 'review', 'verify', 'reject', 'assign', 'in-progress', 'resolve', 'remark', 'duplicate'
   issue,
   onSuccess
 }) => {
@@ -27,6 +27,19 @@ const ActionModal = ({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  // Reset form and errors when modal opens or actionType changes
+  useEffect(() => {
+    if (isOpen) {
+      setRemark('');
+      setDepartment('Road Maintenance');
+      setResolutionDescription('');
+      setResolutionImage(null);
+      setDuplicateOf('');
+      setError('');
+      setLoading(false);
+    }
+  }, [isOpen, actionType, issue]);
+
   if (!isOpen || !issue) return null;
 
   const handleSubmit = async (e) => {
@@ -36,7 +49,12 @@ const ActionModal = ({
 
     try {
       let res;
-      if (actionType === 'verify') {
+      if (actionType === 'review' || actionType === 'under-review') {
+        res = await api.patch(`/admin/issues/${issue._id}/status`, {
+          status: 'Under Review',
+          remark: remark.trim() || 'Moved to Under Review by administrator'
+        });
+      } else if (actionType === 'verify') {
         res = await api.patch(`/admin/issues/${issue._id}/status`, {
           status: 'Verified',
           remark: remark.trim() || 'Verified by administrator'
@@ -108,6 +126,13 @@ const ActionModal = ({
 
   const getModalConfig = () => {
     switch (actionType) {
+      case 'review':
+      case 'under-review':
+        return {
+          title: 'Move to Under Review',
+          btnClass: 'modal-btn-primary',
+          btnText: 'Move to Under Review'
+        };
       case 'verify':
         return {
           title: 'Verify Civic Issue',
@@ -254,6 +279,8 @@ const ActionModal = ({
                   placeholder={
                     actionType === 'reject'
                       ? 'Explain why this report is rejected (e.g. Private property, invalid duplicate)...'
+                      : (actionType === 'review' || actionType === 'under-review')
+                      ? 'Add an optional review note before taking administrative action...'
                       : 'Add an optional note to record in the audit timeline...'
                   }
                   value={remark}

@@ -7,6 +7,7 @@ import StatusBadge from '../components/StatusBadge';
 import SeverityBadge from '../components/SeverityBadge';
 import CategoryBadge from '../components/CategoryBadge';
 import StatusTimeline from '../components/StatusTimeline';
+import NotificationBell from '../components/NotificationBell';
 
 const IssueDetails = () => {
   const { id } = useParams();
@@ -93,22 +94,25 @@ const IssueDetails = () => {
           </Link>
         </div>
 
-        {user && user.role === 'admin' && (
-          <Link
-            to={`/admin/issues/${issue._id}`}
-            style={{
-              padding: '6px 14px',
-              backgroundColor: '#1e293b',
-              color: 'white',
-              borderRadius: '6px',
-              textDecoration: 'none',
-              fontSize: '0.85rem',
-              fontWeight: '600'
-            }}
-          >
-            Admin Inspection
-          </Link>
-        )}
+        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          {user && <NotificationBell />}
+          {user && user.role === 'admin' && (
+            <Link
+              to={`/admin/issues/${issue._id}`}
+              style={{
+                padding: '6px 14px',
+                backgroundColor: '#1e293b',
+                color: 'white',
+                borderRadius: '6px',
+                textDecoration: 'none',
+                fontSize: '0.85rem',
+                fontWeight: '600'
+              }}
+            >
+              Admin Inspection
+            </Link>
+          )}
+        </div>
       </div>
 
       <div style={{ backgroundColor: '#fff', padding: '30px', borderRadius: '12px', boxShadow: '0 4px 16px rgba(0,0,0,0.06)', border: '1px solid #e2e8f0' }}>

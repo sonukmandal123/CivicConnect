@@ -3,6 +3,7 @@ const Issue = require('../models/Issue');
 const { validateStatusTransition, recordStatusChange } = require('../services/statusTransitionService');
 const { DEPARTMENTS, isValidDepartment } = require('../constants/departments');
 const { calculatePriority } = require('../services/priorityService');
+const { notifyCitizen } = require('../services/notificationService');
 const { cloudinary } = require('../config/cloudinary');
 const fs = require('fs');
 
@@ -63,6 +64,33 @@ const updateIssueStatus = async (req, res) => {
       { path: 'adminRemarks.addedBy', select: 'name email role' }
     ]);
 
+    // Notify citizen about status transition
+    let notifTitle = `Status Update: ${status}`;
+    let notifMsg = `Your report "${updatedIssue.title}" status is now ${status}.`;
+    let notifType = 'STATUS_CHANGED';
+
+    if (status === 'Under Review') {
+      notifTitle = 'Report Under Review';
+      notifMsg = `Municipal command center is reviewing your report "${updatedIssue.title}".${remark ? ` Note: "${remark}"` : ''}`;
+    } else if (status === 'Verified') {
+      notifTitle = 'Report Verified';
+      notifMsg = `Your report "${updatedIssue.title}" has been verified by municipal inspectors as an authentic defect.${remark ? ` Note: "${remark}"` : ''}`;
+    } else if (status === 'Rejected') {
+      notifTitle = 'Report Update: Rejected';
+      notifMsg = `Your report "${updatedIssue.title}" was not approved.${remark ? ` Reason: "${remark}"` : ''}`;
+      notifType = 'ISSUE_REJECTED';
+    }
+
+    notifyCitizen({
+      citizenId: updatedIssue.reportedBy?._id || updatedIssue.reportedBy,
+      sender: req.user._id,
+      issue: updatedIssue._id,
+      type: notifType,
+      title: notifTitle,
+      message: notifMsg,
+      link: `/issues/${updatedIssue._id}`
+    }).catch(err => console.error('Failed to notify citizen on status update:', err.message));
+
     res.json({
       message: `Status successfully updated to ${status}`,
       issue: updatedIssue
@@ -102,6 +130,17 @@ const addAdminRemark = async (req, res) => {
     await issue.save();
 
     await issue.populate('adminRemarks.addedBy', 'name email role');
+
+    // Notify citizen about administrative remark
+    notifyCitizen({
+      citizenId: issue.reportedBy,
+      sender: req.user._id,
+      issue: issue._id,
+      type: 'ADMIN_REMARK',
+      title: 'Municipal Update Added',
+      message: `An administrator posted a note on your report "${issue.title}": "${text.trim()}"`,
+      link: `/issues/${issue._id}`
+    }).catch(err => console.error('Failed to notify citizen on remark:', err.message));
 
     res.status(201).json({
       message: 'Remark added successfully',
@@ -223,6 +262,17 @@ const assignIssue = async (req, res) => {
       { path: 'adminRemarks.addedBy', select: 'name email role' }
     ]);
 
+    // Notify citizen about department assignment
+    notifyCitizen({
+      citizenId: updatedIssue.reportedBy?._id || updatedIssue.reportedBy,
+      sender: req.user._id,
+      issue: updatedIssue._id,
+      type: 'ISSUE_ASSIGNED',
+      title: `Assigned to ${department}`,
+      message: `Your report "${updatedIssue.title}" has been assigned to the ${department} division for scheduling.${remark ? ` Dispatch note: "${remark}"` : ''}`,
+      link: `/issues/${updatedIssue._id}`
+    }).catch(err => console.error('Failed to notify citizen on assignment:', err.message));
+
     res.json({
       message: `Issue successfully assigned to ${department}`,
       issue: updatedIssue
@@ -276,6 +326,17 @@ const markInProgress = async (req, res) => {
       { path: 'statusHistory.changedBy', select: 'name email role' },
       { path: 'adminRemarks.addedBy', select: 'name email role' }
     ]);
+
+    // Notify citizen about work in progress
+    notifyCitizen({
+      citizenId: updatedIssue.reportedBy?._id || updatedIssue.reportedBy,
+      sender: req.user._id,
+      issue: updatedIssue._id,
+      type: 'ISSUE_IN_PROGRESS',
+      title: 'Repairs In Progress',
+      message: `Field crew has begun on-site repair work for your report "${updatedIssue.title}".${remark ? ` Status: "${remark}"` : ''}`,
+      link: `/issues/${updatedIssue._id}`
+    }).catch(err => console.error('Failed to notify citizen on in progress:', err.message));
 
     res.json({
       message: 'Issue marked as In Progress',
@@ -361,6 +422,17 @@ const resolveIssue = async (req, res) => {
       { path: 'statusHistory.changedBy', select: 'name email role' },
       { path: 'adminRemarks.addedBy', select: 'name email role' }
     ]);
+
+    // Notify citizen about final resolution
+    notifyCitizen({
+      citizenId: updatedIssue.reportedBy?._id || updatedIssue.reportedBy,
+      sender: req.user._id,
+      issue: updatedIssue._id,
+      type: 'ISSUE_RESOLVED',
+      title: 'Issue Resolved',
+      message: `Your reported civic issue "${updatedIssue.title}" has been successfully resolved. Work performed: "${resolutionDescription.trim()}". Check the tracking page for photo proof.`,
+      link: `/issues/${updatedIssue._id}`
+    }).catch(err => console.error('Failed to notify citizen on resolution:', err.message));
 
     res.json({
       message: 'Issue successfully resolved',
@@ -615,6 +687,17 @@ const markDuplicateIssue = async (req, res) => {
       { path: 'statusHistory.changedBy', select: 'name email role' },
       { path: 'adminRemarks.addedBy', select: 'name email role' }
     ]);
+
+    // Notify citizen that issue was linked as duplicate
+    notifyCitizen({
+      citizenId: updatedIssue.reportedBy?._id || updatedIssue.reportedBy,
+      sender: req.user._id,
+      issue: updatedIssue._id,
+      type: 'ISSUE_REJECTED',
+      title: 'Report Linked as Duplicate',
+      message: `Your report "${updatedIssue.title}" was identified as duplicate of report #${targetIssue._id} ("${targetIssue.title}"). Tracking will continue under the primary report.`,
+      link: `/issues/${updatedIssue._id}`
+    }).catch(err => console.error('Failed to notify citizen on duplicate:', err.message));
 
     res.json({
       message: 'Issue successfully marked as duplicate',

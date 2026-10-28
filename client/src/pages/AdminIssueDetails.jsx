@@ -7,6 +7,7 @@ import PriorityBadge from '../components/PriorityBadge';
 import StatusBadge from '../components/StatusBadge';
 import StatusTimeline from '../components/StatusTimeline';
 import ActionModal from '../components/modals/ActionModal';
+import NotificationBell from '../components/NotificationBell';
 import './AdminIssueDetails.css';
 
 const AdminIssueDetails = () => {
@@ -107,6 +108,7 @@ const AdminIssueDetails = () => {
             </div>
           </div>
           <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+            <NotificationBell />
             <StatusBadge status={issue.status} />
             <PriorityBadge level={priority.level} score={priority.score} />
           </div>
@@ -340,7 +342,7 @@ const AdminIssueDetails = () => {
               {issue.status === 'Submitted' && (
                 <button
                   className="action-btn-styled in-progress"
-                  onClick={() => handleOpenModal('verify')}
+                  onClick={() => handleOpenModal('review')}
                 >
                   Move to Under Review
                 </button>
@@ -361,6 +363,15 @@ const AdminIssueDetails = () => {
                     Reject Report
                   </button>
                 </>
+              )}
+
+              {issue.status === 'Rejected' && (
+                <button
+                  className="action-btn-styled in-progress"
+                  onClick={() => handleOpenModal('review')}
+                >
+                  Reopen / Move to Under Review
+                </button>
               )}
 
               {issue.status === 'Verified' && (

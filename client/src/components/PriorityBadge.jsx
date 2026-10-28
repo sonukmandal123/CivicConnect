@@ -27,9 +27,10 @@ const PRIORITY_STYLES = {
   }
 };
 
-const PriorityBadge = ({ level = 'Low', score, showDot = true, size = 'normal' }) => {
-  const normalizedLevel = ['Critical', 'High', 'Medium', 'Low'].includes(level) ? level : 'Low';
-  const style = PRIORITY_STYLES[normalizedLevel];
+const PriorityBadge = ({ level, priorityLevel, score, showDot = true, size = 'normal' }) => {
+  const effectiveLevel = level || priorityLevel || 'Low';
+  const normalizedLevel = ['Critical', 'High', 'Medium', 'Low'].includes(effectiveLevel) ? effectiveLevel : 'Low';
+  const style = PRIORITY_STYLES[normalizedLevel] || PRIORITY_STYLES.Low;
 
   const isSmall = size === 'small';
 

@@ -64,9 +64,9 @@ async function runEndToEndScenario() {
   // STEP 1: Multi-Role Setup & Authentication
   console.log('STEP 1: Setting up and Authenticating Users...');
   // Ensure Citizen 1 exists
-  let citizen1 = await User.findOne({ email: 'john@example.com' });
+  let citizen1 = await User.findOne({ email: 'sonumandalsmve@gmail.com' });
   if (!citizen1) {
-    citizen1 = await User.create({ name: 'John Doe', email: 'john@example.com', password: 'password123', role: 'citizen' });
+    citizen1 = await User.create({ name: 'Sonu Mandal', email: 'sonumandalsmve@gmail.com', password: 'password123', role: 'citizen' });
   }
 
   // Ensure Citizen 2 exists (to test independent community confirmations)
@@ -76,7 +76,7 @@ async function runEndToEndScenario() {
   }
 
   const [c1Login, c2Login, adminLogin] = await Promise.all([
-    apiCall('POST', '/api/auth/login', { email: 'john@example.com', password: 'password123' }),
+    apiCall('POST', '/api/auth/login', { email: 'sonumandalsmve@gmail.com', password: 'password123' }),
     apiCall('POST', '/api/auth/login', { email: 'citizen2@example.com', password: 'password123' }),
     apiCall('POST', '/api/auth/login', { email: 'admin@example.com', password: 'adminpassword123' })
   ]);

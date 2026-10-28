@@ -16,7 +16,7 @@ const Issue = require('../models/Issue');
 const { calculatePriority } = require('../services/priorityService');
 
 const CITIZENS_TO_CREATE = [
-  { name: 'John Doe', email: 'john@example.com', password: 'password123', role: 'citizen' },
+  { name: 'Sonu Mandal', email: 'sonumandalsmve@gmail.com', password: 'password123', role: 'citizen' },
   { name: 'Priya Sharma', email: 'citizen2@example.com', password: 'password123', role: 'citizen' },
   { name: 'Rahul Verma', email: 'rahul.verma@example.com', password: 'password123', role: 'citizen' },
   { name: 'Amit Patel', email: 'amit.patel@example.com', password: 'password123', role: 'citizen' },
