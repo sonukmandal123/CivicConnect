@@ -1,7 +1,12 @@
 import axios from 'axios';
 
+// Cleanly resolve API base URL whether user passed with /api, trailing slashes, or without /api
+const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const cleanUrl = rawBaseUrl.trim().replace(/\/+$/, '');
+const baseURL = cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL,
 });
 
 // Intercept requests to add the Authorization token

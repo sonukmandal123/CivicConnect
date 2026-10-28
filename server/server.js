@@ -21,26 +21,12 @@ app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }, // Allows image loading across origins
 }));
 
-// CORS Configuration - Restricted to authorized client domains
-const allowedOrigins = [
-  'http://localhost:5173',
-  'http://localhost:3000',
-  'http://127.0.0.1:5173',
-  process.env.CLIENT_URL
-].filter(Boolean);
-
+// CORS Configuration - Allows deployed Vercel apps, previews, and local development
 app.use(cors({
-  origin: function (origin, callback) {
-    // Allow non-browser requests (tools, testing, curl, mobile)
-    if (!origin) return callback(null, true);
-    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    return callback(new Error(`Origin ${origin} not allowed by CORS`));
-  },
+  origin: true, // Dynamically reflects requesting origin so Vercel, localhost, and preview domains work seamlessly
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
 }));
 
 // Body Parsers with strict size limits to prevent payload DoS
