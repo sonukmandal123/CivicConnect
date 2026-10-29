@@ -1,7 +1,11 @@
 import axios from 'axios';
 
-// Cleanly resolve API base URL whether user passed with /api, trailing slashes, or without /api
-const rawBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Cleanly resolve API base URL: In production, automatically connects to your live Render backend
+const fallbackUrl = import.meta.env.PROD
+  ? 'https://civicconnect-api-e36u.onrender.com/api'
+  : 'http://localhost:5000/api';
+
+const rawBaseUrl = import.meta.env.VITE_API_URL || fallbackUrl;
 const cleanUrl = rawBaseUrl.trim().replace(/\/+$/, '');
 const baseURL = cleanUrl.endsWith('/api') ? cleanUrl : `${cleanUrl}/api`;
 
