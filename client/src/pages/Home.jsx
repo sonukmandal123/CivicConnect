@@ -24,7 +24,6 @@ const Home = () => {
         </div>
 
         <div className={`nav-links ${isMenuOpen ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          {user && <NotificationBell />}
           <Link to="/map" className="nav-link">Map</Link>
           {user ? (
             <>
@@ -38,6 +37,7 @@ const Home = () => {
               >
                 Logout
               </button>
+              <NotificationBell />
             </>
           ) : (
             <>
