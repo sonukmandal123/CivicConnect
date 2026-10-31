@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
 const rateLimit = require('express-rate-limit');
-const { registerUser, loginUser } = require('../controllers/authController');
+const { registerUser, loginUser, getMe } = require('../controllers/authController');
+const { protect } = require('../middleware/authMiddleware');
 
 // Rate limiter to prevent automated brute-force attacks (max 30 requests per 15 minutes)
 const authLimiter = rateLimit({
@@ -23,6 +24,11 @@ router.post('/register', authLimiter, registerUser);
 // @desc    Login user and get token
 // @access  Public
 router.post('/login', authLimiter, loginUser);
+
+// @route   GET /api/auth/me
+// @desc    Get current user profile
+// @access  Private
+router.get('/me', protect, getMe);
 
 module.exports = router;
 

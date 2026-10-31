@@ -1,12 +1,17 @@
 import React, { useState, useContext } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import './Auth.css'; // Basic styles for both auth pages
 
 const Login = () => {
+  const location = useLocation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+  const [error, setError] = useState(
+    new URLSearchParams(location.search).get('expired') === 'true'
+      ? 'Your session has expired. Please log in again to continue.'
+      : ''
+  );
   
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();

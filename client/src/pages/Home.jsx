@@ -19,30 +19,86 @@ const Home = () => {
           </div>
         </div>
         
-        <div className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-          {isMenuOpen ? '✕' : '☰'}
+        <div className="mobile-nav-actions">
+          <button 
+            type="button" 
+            className="mobile-menu-btn" 
+            onClick={() => setIsMenuOpen(prev => !prev)}
+            aria-label="Toggle navigation menu"
+            aria-expanded={isMenuOpen}
+          >
+            {isMenuOpen ? '✕' : '☰'}
+          </button>
+          {user && (
+            <div className="mobile-bell-wrapper">
+              <NotificationBell />
+            </div>
+          )}
         </div>
 
-        <div className={`nav-links ${isMenuOpen ? 'active' : ''}`} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-          <Link to="/map" className="nav-link">Map</Link>
+        <div className={`nav-links ${isMenuOpen ? 'active' : ''}`}>
+          <Link to="/map" className="btn-secondary" onClick={() => setIsMenuOpen(false)}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon>
+              <line x1="8" y1="2" x2="8" y2="18"></line>
+              <line x1="16" y1="6" x2="16" y2="22"></line>
+            </svg>
+            Map
+          </Link>
           {user ? (
             <>
-              <Link to={user.role === 'admin' ? '/admin' : '/dashboard'} className="nav-link">
-                {user.role === 'admin' ? 'Admin Portal' : 'Dashboard'}
+              <Link 
+                to={user.role === 'admin' ? '/admin' : '/dashboard'} 
+                className="btn-secondary"
+                onClick={() => setIsMenuOpen(false)}
+              >
+                {user.role === 'admin' ? (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                    </svg>
+                    Admin Portal
+                  </>
+                ) : (
+                  <>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="3" width="7" height="9"></rect>
+                      <rect x="14" y="3" width="7" height="5"></rect>
+                      <rect x="14" y="12" width="7" height="9"></rect>
+                      <rect x="3" y="16" width="7" height="5"></rect>
+                    </svg>
+                    Dashboard
+                  </>
+                )}
               </Link>
               <button 
-                onClick={logout} 
-                className="nav-btn" 
-                style={{ background: '#ef4444', border: 'none', cursor: 'pointer', padding: '8px 16px', borderRadius: '6px', color: 'white', fontWeight: '600' }}
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  logout();
+                }} 
+                className="btn-danger"
               >
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
                 Logout
               </button>
-              <NotificationBell />
+              {/* Notification bell for desktop; hidden on mobile since it's displayed right of the hamburger menu */}
+              <div className="desktop-bell-wrapper">
+                <NotificationBell />
+              </div>
             </>
           ) : (
             <>
-              <Link to="/login" className="nav-link">Login</Link>
-              <Link to="/register" className="nav-btn">Sign Up</Link>
+              <Link to="/login" className="btn-secondary" onClick={() => setIsMenuOpen(false)}>
+                Login
+              </Link>
+              <Link to="/register" className="nav-btn" onClick={() => setIsMenuOpen(false)}>
+                Sign Up
+              </Link>
             </>
           )}
         </div>
@@ -66,23 +122,57 @@ const Home = () => {
         <div className="hero-visual">
           <div className="glass-card mockup-card">
             <div className="mockup-header">
-              <span className="dot red"></span>
-              <span className="dot yellow"></span>
-              <span className="dot green"></span>
-            </div>
-            <div className="mockup-body">
-              <div className="skeleton-title"></div>
-              <div className="skeleton-image">
-                <span className="image-icon" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-                    <circle cx="12" cy="13" r="4"></circle>
-                  </svg>
-                </span>
+              <div className="mockup-dots">
+                <span className="dot red"></span>
+                <span className="dot yellow"></span>
+                <span className="dot green"></span>
               </div>
-              <div className="skeleton-text"></div>
-              <div className="skeleton-text short"></div>
-              <div className="mockup-btn">Submit Report</div>
+              <span className="mockup-app-title">civicconnect.app/report</span>
+            </div>
+            
+            <div className="mockup-body">
+              <div className="mockup-card-header">
+                <div className="mockup-badge-row">
+                  <span className="mockup-pill category">Pothole</span>
+                  <span className="mockup-pill severity">High Severity</span>
+                </div>
+                <h4 className="mockup-title">Hazardous Road Crater</h4>
+              </div>
+
+              <div className="mockup-image-preview">
+                <img 
+                  src="https://images.unsplash.com/photo-1515162816999-a0c47dc192f7?auto=format&fit=crop&w=600&q=80" 
+                  alt="Issue Preview" 
+                  className="mockup-photo" 
+                />
+                <div className="mockup-image-overlay">
+                  <span className="mockup-ai-chip">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+                    </svg>
+                    AI Verified 96%
+                  </span>
+                </div>
+              </div>
+
+              <div className="mockup-meta">
+                <span className="mockup-location">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                    <circle cx="12" cy="10" r="3"></circle>
+                  </svg>
+                  Main Road Bistupur
+                </span>
+                <span className="mockup-gps-badge">GPS Tagged</span>
+              </div>
+
+              <div className="mockup-btn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M22 2L11 13"></path>
+                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                </svg>
+                Submit Report
+              </div>
             </div>
           </div>
         </div>

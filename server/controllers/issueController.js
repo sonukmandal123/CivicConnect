@@ -121,11 +121,21 @@ const createIssue = async (req, res) => {
 // @access  Private
 const getMyIssues = async (req, res) => {
   try {
-    // Find issues where reportedBy matches the logged-in user's ID
-    const issues = await Issue.find({ reportedBy: req.user._id }).sort({ createdAt: -1 });
+    if (!req.user || !req.user._id) {
+      return res.status(401).json({ message: 'User identification failed' });
+    }
+
+    // Find issues where reportedBy matches the logged-in user's ID (handles both ObjectId & string format)
+    const issues = await Issue.find({
+      $or: [
+        { reportedBy: req.user._id },
+        { reportedBy: req.user._id.toString() }
+      ]
+    }).sort({ createdAt: -1 });
+
     res.json(issues);
   } catch (error) {
-    console.error(error);
+    console.error('Error fetching citizen issues:', error);
     res.status(500).json({ message: 'Server error while fetching your issues' });
   }
 };

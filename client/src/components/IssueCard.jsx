@@ -20,9 +20,10 @@ const IssueCard = ({ issue }) => {
     day: 'numeric'
   });
 
-  const descriptionPreview = issue.description.length > 75 
-    ? issue.description.substring(0, 75) + '...' 
-    : issue.description;
+  const descriptionText = issue.description || '';
+  const descriptionPreview = descriptionText.length > 75 
+    ? descriptionText.substring(0, 75) + '...' 
+    : descriptionText;
 
   const hasAiData = issue.aiIssueType !== undefined && issue.aiConfidence !== undefined;
   const hasDiscrepancy = hasAiData && (

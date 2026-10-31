@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect, useContext, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import IssueCard from '../components/IssueCard';
@@ -10,6 +10,7 @@ const Dashboard = () => {
   const [issues, setIssues] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [isSessionExpired, setIsSessionExpired] = useState(false);
   
   const { user, token, loading: authLoading, logout } = useContext(AuthContext);
   const navigate = useNavigate();
@@ -25,22 +26,36 @@ const Dashboard = () => {
     }
   }, [authLoading, token, user, navigate]);
 
-  useEffect(() => {
-    const fetchMyIssues = async () => {
-      try {
-        const response = await api.get('/issues/my');
-        setIssues(response.data);
-      } catch (err) {
-        setError('Failed to load your reports.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchMyIssues = useCallback(async () => {
+    if (!token || !user || user.role === 'admin') return;
 
-    if (token && user && user.role !== 'admin') {
-      fetchMyIssues();
+    try {
+      setLoading(true);
+      setError('');
+      setIsSessionExpired(false);
+
+      const response = await api.get('/issues/my');
+      setIssues(Array.isArray(response.data) ? response.data : []);
+    } catch (err) {
+      console.error('Failed to fetch citizen reports:', err);
+      if (err.response?.status === 401) {
+        setIsSessionExpired(true);
+        setError('Your session has expired or is invalid. Please log in again to view your reports.');
+      } else {
+        const errorMsg = err.response?.data?.message 
+          || (err.code === 'ERR_NETWORK' 
+            ? 'Unable to reach the server. The backend may be starting up or sleeping (takes ~25s on free tier). Please retry.' 
+            : 'Failed to load your reports.');
+        setError(errorMsg);
+      }
+    } finally {
+      setLoading(false);
     }
   }, [token, user]);
+
+  useEffect(() => {
+    fetchMyIssues();
+  }, [fetchMyIssues]);
 
   const handleLogout = () => {
     logout();
@@ -113,14 +128,54 @@ const Dashboard = () => {
       <main className="dashboard-main">
         <div className="section-header">
           <h2>My Reports</h2>
-          <span className="issue-count">{issues.length} Total</span>
+          <span className="issue-count">
+            {loading ? 'Loading...' : error ? '—' : `${issues.length} Total`}
+          </span>
         </div>
 
-        {error && <div className="dashboard-error">{error}</div>}
+        {error && (
+          <div className="dashboard-error" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
+              <span>{error}</span>
+            </div>
+            <div>
+              {isSessionExpired ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    navigate('/login');
+                  }}
+                  className="btn-primary"
+                  style={{ border: 'none', cursor: 'pointer', padding: '6px 14px', fontSize: '0.85rem' }}
+                >
+                  Log In Again
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={fetchMyIssues}
+                  className="btn-secondary"
+                  style={{ cursor: 'pointer', padding: '6px 14px', fontSize: '0.85rem' }}
+                >
+                  ↻ Try Again
+                </button>
+              )}
+            </div>
+          </div>
+        )}
 
         {loading ? (
-          <div className="loading">Loading your reports...</div>
-        ) : issues.length === 0 ? (
+          <div className="loading">
+            <div style={{ width: '32px', height: '32px', border: '3px solid #e2e8f0', borderTopColor: '#3b82f6', borderRadius: '50%', margin: '0 auto 12px auto', animation: 'spin 1s linear infinite' }}></div>
+            Loading your reports...
+          </div>
+        ) : error ? null : issues.length === 0 ? (
           <div className="empty-state">
             <p>You haven't reported any issues yet.</p>
             <Link to="/report" className="btn-primary">Report Your First Issue</Link>
