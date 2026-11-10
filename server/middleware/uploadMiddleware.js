@@ -1,15 +1,35 @@
 const multer = require('multer');
 const path = require('path');
+const fs = require('fs');
+const os = require('os');
+
+// Resolve an absolute uploads directory, fallback to os.tmpdir() if needed
+const uploadDir = path.join(__dirname, '..', 'uploads');
+try {
+  if (!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+  }
+} catch (err) {
+  console.warn('Could not create server/uploads directory, will use os.tmpdir():', err.message);
+}
 
 // Configure disk storage for temporary file holding
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    // Files will be temporarily saved in the 'uploads' folder
-    cb(null, 'uploads/');
+    try {
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    } catch (err) {
+      // Fallback to system temp directory (guaranteed to exist on Render/Linux/Windows)
+      cb(null, os.tmpdir());
+    }
   },
   filename: function (req, file, cb) {
-    // Generate a unique filename using timestamp
-    cb(null, `issue-${Date.now()}${path.extname(file.originalname)}`);
+    // Generate a unique filename using timestamp + random suffix
+    const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    cb(null, `issue-${uniqueSuffix}${path.extname(file.originalname)}`);
   }
 });
 

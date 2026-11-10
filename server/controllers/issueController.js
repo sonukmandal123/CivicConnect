@@ -29,7 +29,9 @@ const createIssue = async (req, res) => {
     });
 
     // Delete the temporary file from our server's 'uploads' folder
-    fs.unlinkSync(req.file.path);
+    if (fs.existsSync(req.file.path)) {
+      fs.unlinkSync(req.file.path);
+    }
 
     // Call AI Service
     let aiData = {};
